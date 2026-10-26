@@ -10,6 +10,8 @@ import {
   CAT_WALK,
   FIREPLACE,
   FIREPLACE_COLORS,
+  POSTER,
+  POSTER_COLORS,
   SCRATCHER,
   SCRATCHER_COLORS,
   SOFA,
@@ -97,7 +99,9 @@ export default function RoomScene({ cats, highlightDay }) {
     <div className="room">
       <div className="room-inner" style={{ '--px': '0.7cqw' }}>
         <div className="window" />
-        <div className="picture" />
+        <div className="furniture" style={{ left: '32%', top: '8%' }}>
+          <Sprite frames={[POSTER]} colors={POSTER_COLORS} />
+        </div>
         <div className="rug" />
         <div className="furniture" style={{ left: '3%', bottom: '32%' }}>
           <Sprite frames={FIREPLACE} colors={FIREPLACE_COLORS} fps={5} />

@@ -206,6 +206,43 @@ export const FIREPLACE_COLORS = {
   Y: '#ffd93b',
 }
 
+// Plakat na ścianie: dziewczynka z kocimi uszkami
+export const POSTER = [
+  'FFFFFFFFFFFFFFFF',
+  'FbbbbbbbbbbbbbbF',
+  'FbbHbbbbbbbbHbbF',
+  'FbHHHbbbbbbHHHbF',
+  'FbHhHHHHHHHHhHbF',
+  'FbHHHHHHHHHHHHbF',
+  'FbHHSSSSSSSSHHbF',
+  'FbHSSSSSSSSSSHbF',
+  'FbHSSESSSSESSHbF',
+  'FbHSSESSSSESSHbF',
+  'FbHSCSSSSSSCSHbF',
+  'FbHHSSSMMSSSHHbF',
+  'FbHHbSSSSSSbHHbF',
+  'FbHbbbDDDDbbbHbF',
+  'FbbbbDDDDDDbbbbF',
+  'FbbbDDDDDDDDbbbF',
+  'FbbbDDdDDdDDbbbF',
+  'FbbDDDDDDDDDDbbF',
+  'FbbbbbbbbbbbbbbF',
+  'FFFFFFFFFFFFFFFF',
+]
+
+export const POSTER_COLORS = {
+  F: '#7a4a2a',
+  b: '#ffd6e8',
+  H: '#5a3a2a',
+  h: '#f29bb0',
+  S: '#ffd9b8',
+  E: '#2a1f2b',
+  C: '#ff9fb0',
+  M: '#d9485f',
+  D: '#8e6bbf',
+  d: '#ffffff',
+}
+
 // Serduszko i trumienka do paska postępu w menu
 export const HEART = [
   '.OO.OO.',
