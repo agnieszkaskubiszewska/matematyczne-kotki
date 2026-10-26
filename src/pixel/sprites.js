@@ -233,7 +233,7 @@ export const POSTER = [
 export const POSTER_COLORS = {
   F: '#7a4a2a',
   b: '#ffd6e8',
-  H: '#5a3a2a',
+  H: '#e0b45c',
   h: '#f29bb0',
   S: '#ffd9b8',
   E: '#2a1f2b',
