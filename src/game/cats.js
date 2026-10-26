@@ -1,7 +1,7 @@
 import { seededRandom, shuffle } from './random.js'
 
 const NAMES = [
-  'Mruczek', 'Puszek', 'Filemon', 'Kicia', 'Łatka', 'Gacek', 'Bonifacy',
+  'Tajfun', 'Puszek', 'Filemon', 'Kicia', 'Łatka', 'Gacek', 'Bonifacy',
   'Rudy', 'Pusia', 'Tygrys', 'Kluska', 'Pączek', 'Śnieżka', 'Behemot',
   'Fruzia', 'Miodek', 'Psotka', 'Figa', 'Kropka', 'Sushi', 'Cynamon',
   'Mgiełka', 'Felek', 'Bursztyn', 'Iskierka', 'Leon', 'Nutka', 'Kajtek',
