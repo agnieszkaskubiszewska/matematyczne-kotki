@@ -1,0 +1,37 @@
+:root {
+  --ink: #2a1f2b;
+  --paper: #fff4e0;
+  --bg: #fbe3c8;
+  --accent: #ff8a3d;
+  --good: #3fa34d;
+  --bad: #d94848;
+  --night: #1f1d3a;
+  /* cyfry w pikselowej czcionce są mało czytelne – liczby piszemy tą */
+  --num-font: 'Nunito', system-ui, sans-serif;
+
+  font-family: 'Pixelify Sans', system-ui, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    repeating-linear-gradient(45deg, transparent 0 24px, rgb(255 255 255 / 0.25) 24px 48px),
+    var(--bg);
+}
+
+#root {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+button {
+  font-family: inherit;
+}
