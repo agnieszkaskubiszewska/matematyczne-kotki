@@ -1,7 +1,7 @@
 import { catColors } from '../game/cats.js'
 import { TOTAL_DAYS, isTestMode, playedToday } from '../game/storage.js'
 import Sprite from '../pixel/Sprite.jsx'
-import { CAT_SIT, CAT_WALK, GRAVE, GRAVE_COLORS, RAT_COLORS, RAT_WALK } from '../pixel/sprites.js'
+import { CAT_SIT, CAT_WALK_BLACK, GRAVE, GRAVE_COLORS, RAT_COLORS, RAT_WALK } from '../pixel/sprites.js'
 
 export default function Menu({ state, onStart, onGo, onReset, onAllowReplay }) {
   const test = isTestMode()
@@ -22,7 +22,7 @@ export default function Menu({ state, onStart, onGo, onReset, onAllowReplay }) {
       <h1 className="title">Matematyczne Kotki</h1>
 
       <div className="menu-hero" style={{ '--px': 'min(1.1vw, 8px)' }}>
-        <Sprite frames={CAT_WALK} colors={catColors('rudy')} fps={3} />
+        <Sprite frames={CAT_WALK_BLACK} colors={{ ...catColors('czarny'), W: '#ffffff' }} fps={3} />
         <span className="vs">VS</span>
         <Sprite frames={RAT_WALK} colors={RAT_COLORS} fps={3} />
       </div>

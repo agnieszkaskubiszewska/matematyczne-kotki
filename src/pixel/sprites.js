@@ -22,6 +22,15 @@ export const CAT_WALK = [
   [...CAT_SIDE_BODY, '...OBO..OBOOBO..OBO.', '...OOO..OOOOOO..OOO.'],
 ]
 
+// Kotek z menu: cały czarny, tylko mała biała łatka na klatce piersiowej.
+const CHEST_PATCH = { 9: [14], 10: [14] }
+
+export const CAT_WALK_BLACK = CAT_WALK.map((frame) =>
+  frame.map((row, y) =>
+    [...row.replace(/[WD]/g, 'B')].map((ch, x) => (CHEST_PATCH[y]?.includes(x) ? 'W' : ch)).join(''),
+  ),
+)
+
 // ---------- Kotek siedzący, przodem ----------
 const CAT_SIT_HEAD = ['OO........OO', 'OPO......OPO', 'OBBOOOOOOBBO', 'OBBBBDDBBBBO']
 const CAT_SIT_BODY = [
