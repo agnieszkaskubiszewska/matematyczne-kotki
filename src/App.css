@@ -187,6 +187,12 @@
   box-shadow: 0 0 0 0.6cqw #fff6c288;
 }
 
+/* w walce księżyc niżej i bardziej z boku, żeby nie zasłaniał komunikatów */
+.stage-inner .moon {
+  top: 22%;
+  right: 3%;
+}
+
 .battle-cat {
   position: absolute;
   left: 3%;
