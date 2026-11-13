@@ -14,6 +14,7 @@ import Battle from './screens/Battle.jsx'
 import Cemetery from './screens/Cemetery.jsx'
 import Defeat from './screens/Defeat.jsx'
 import Menu from './screens/Menu.jsx'
+import Mistakes from './screens/Mistakes.jsx'
 import Room from './screens/Room.jsx'
 import Victory from './screens/Victory.jsx'
 import './App.css'
@@ -30,7 +31,12 @@ export default function App() {
 
   function finishBattle(current, result) {
     const record = { day: current.day, date: current.date, result, cat: current.cat }
-    update({ ...current.state, days: [...current.state.days, record], battle: null })
+    update({
+      ...current.state,
+      days: [...current.state.days, record],
+      mistakesLog: [...current.state.mistakesLog, ...(current.wrongAnswers ?? [])],
+      battle: null,
+    })
     setLastResult(record)
     setScreen(result === 'saved' ? 'victory' : 'defeat')
   }
@@ -78,6 +84,13 @@ export default function App() {
       return <Room cats={savedCats} onBack={() => setScreen('menu')} />
     case 'cemetery':
       return <Cemetery graves={lostCats} onBack={() => setScreen('menu')} />
+    case 'mistakes':
+      return (
+        <Mistakes
+          entries={[...state.mistakesLog, ...(state.battle?.wrongAnswers ?? [])]}
+          onBack={() => setScreen('menu')}
+        />
+      )
     default:
       return (
         <Menu

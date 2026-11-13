@@ -18,8 +18,11 @@ export function newState() {
     seed: Math.floor(Math.random() * 1e9),
     // { day, date, result: 'saved' | 'lost', cat: { name, palette } }
     days: [],
-    // trwająca walka: { day, date, cat, tasks, index, chased, mistakes }
+    // trwająca walka: { day, date, cat, tasks, index, chased, mistakes, warned, wrongAnswers }
     battle: null,
+    // zadania z błędną odpowiedzią: { day, topic, text, answer, given: [...], fixed }
+    // (starsze zapisy nie mają tego pola – loadState uzupełnia je pustą listą)
+    mistakesLog: [],
   }
 }
 
