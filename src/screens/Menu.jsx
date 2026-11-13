@@ -41,6 +41,9 @@ export default function Menu({ state, onStart, onGo, onReset, onAllowReplay }) {
         <button className="btn" onClick={() => onGo('cemetery')}>
           Odwiedź cmentarz ({lost})
         </button>
+        <button className="btn" onClick={() => onGo('mistakes')}>
+          Trudne zadania ({state.mistakesLog.length + (state.battle?.wrongAnswers?.length ?? 0)})
+        </button>
         {finished && (
           <button
             className="btn"

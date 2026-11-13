@@ -14,7 +14,8 @@ const PRAISE = ['Brawo!', 'Super!', 'Świetnie!', 'Tak jest!', 'Uciekaj, szczurz
 
 export default function Battle({ battle, onChange, onFinish, onExit }) {
   const [input, setInput] = useState('')
-  // idle – czekamy na odpowiedź; hit – szczur ucieka; miss – szczur się zbliża; caught – koniec
+  // idle – czekamy na odpowiedź; warn – pierwsza zła odpowiedź, jest druga szansa;
+  // hit – szczur ucieka; miss – szczur się zbliża; caught – koniec
   const [phase, setPhase] = useState('idle')
   const [shownTask, setShownTask] = useState(null)
   const [fleeingRat, setFleeingRat] = useState(null)
@@ -32,17 +33,37 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
   const submit = useCallback(() => {
     if (phase !== 'idle' || input === '') return
     const current = battle.tasks[battle.index]
-    const correct = Number(input) === current.answer
+    const given = Number(input)
+    const correct = given === current.answer
+    const wrongAnswers = battle.wrongAnswers ?? []
+    setInput('')
+
+    // Pierwsza zła odpowiedź na to zadanie: tylko ostrzeżenie i druga szansa.
+    if (!correct && !battle.warned) {
+      const entry = { day: battle.day, topic: current.topic, text: current.text, answer: current.answer, given: [given] }
+      onChange({ ...battle, warned: true, wrongAnswers: [...wrongAnswers, entry] })
+      setPhase('warn')
+      setMessage({ kind: 'warn', text: 'Zła odpowiedź! Spróbuj jeszcze raz' })
+      later(() => setPhase('idle'), 900)
+      return
+    }
+
     const next = {
       ...battle,
       index: battle.index + 1,
       chased: battle.chased + (correct ? 1 : 0),
       mistakes: battle.mistakes + (correct ? 0 : 1),
+      warned: false,
+    }
+    if (battle.warned) {
+      // druga próba – dopisujemy jej wynik do wpisu z pierwszej
+      const last = wrongAnswers[wrongAnswers.length - 1]
+      const updated = { ...last, fixed: correct, given: correct ? last.given : [...last.given, given] }
+      next.wrongAnswers = [...wrongAnswers.slice(0, -1), updated]
     }
     if (next.index >= next.tasks.length) {
       next.tasks = [...next.tasks, makeExtraTask(seededRandom(Date.now()), battle.day, next.tasks)]
     }
-    setInput('')
     onChange(next)
 
     if (correct) {
@@ -116,7 +137,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
         </span>
       </div>
 
-      <div className={`stage ${phase === 'miss' ? 'shake' : ''}`}>
+      <div className={`stage ${phase === 'miss' || phase === 'warn' ? 'shake' : ''}`}>
         <div className="stage-inner" style={{ '--px': '0.68cqw' }}>
           <div className="moon" />
           <div className={`battle-cat ${phase === 'hit' ? 'pounce' : ''} ${phase === 'caught' ? 'caught' : ''}`}>
@@ -136,7 +157,10 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
           )}
 
           {phase !== 'caught' && phase !== 'hit' && (
-            <div className={`cloud ${task.solved ? 'cloud-solved' : ''}`} style={{ left: `${frontX + 7}%` }}>
+            <div
+              className={`cloud ${task.solved ? 'cloud-solved' : battle.warned ? 'cloud-retry' : ''}`}
+              style={{ left: `${frontX + 7}%` }}
+            >
               {task.text} = {task.solved ? task.answer : '?'}
             </div>
           )}

@@ -306,6 +306,16 @@
   color: #ffb0b0;
 }
 
+.battle-message.warn {
+  color: #ffd166;
+}
+
+/* druga szansa na to samo zadanie */
+.cloud-retry {
+  border-color: #f08a24;
+  background: #fff3d6;
+}
+
 .rats-left {
   position: absolute;
   right: 2%;
@@ -517,6 +527,81 @@
 
 .mourning .grave-day {
   font-size: 2.4cqw;
+}
+
+/* ---------- Trudne zadania ---------- */
+.topic-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.topic-chip {
+  border: 3px solid var(--ink);
+  background: var(--paper);
+  padding: 4px 10px;
+  font-size: 1.1rem;
+}
+
+.topic-chip strong,
+.mistake-task,
+.mistake-given {
+  font-family: var(--num-font);
+  font-weight: 900;
+}
+
+.mistakes-list {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mistakes-day h3 {
+  margin: 0 0 6px;
+  font-size: 1.3rem;
+}
+
+.mistakes-day ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mistakes-day li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  padding: 8px 12px;
+  border: 3px solid var(--ink);
+  background: #fff;
+}
+
+.mistake-task {
+  font-size: 1.5rem;
+}
+
+.mistake-given {
+  align-self: center;
+  color: var(--bad);
+  font-size: 1.1rem;
+}
+
+.mistake-result {
+  grid-column: 1 / -1;
+  font-size: 1rem;
+}
+
+.mistakes-day li.fixed .mistake-result {
+  color: var(--good);
+}
+
+.mistakes-day li.missed .mistake-result {
+  color: var(--bad);
 }
 
 @media (max-width: 520px) {
