@@ -62,7 +62,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
       next.wrongAnswers = [...wrongAnswers.slice(0, -1), updated]
     }
     if (next.index >= next.tasks.length) {
-      next.tasks = [...next.tasks, makeExtraTask(seededRandom(Date.now()), battle.day, next.tasks)]
+      next.tasks = [...next.tasks, makeExtraTask(seededRandom(Date.now()), next.tasks)]
     }
     onChange(next)
 

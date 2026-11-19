@@ -54,7 +54,7 @@ export default function App() {
       day,
       date: todayStr(),
       cat: catForDay(state.seed, day),
-      tasks: makeDayTasks(seededRandom(Date.now()), day),
+      tasks: makeDayTasks(seededRandom(Date.now())),
       index: 0,
       chased: 0,
       mistakes: 0,
