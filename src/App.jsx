@@ -41,25 +41,28 @@ export default function App() {
     setScreen(result === 'saved' ? 'victory' : 'defeat')
   }
 
-  function startBattle() {
-    if (state.battle) {
-      // walka przerwana wcześniej – mogła się już rozstrzygnąć
-      const { battle } = state
-      if (battle.mistakes >= MAX_MISTAKES) return finishBattle({ ...battle, state }, 'lost')
-      if (battle.chased >= RATS_PER_DAY) return finishBattle({ ...battle, state }, 'saved')
-      return setScreen('battle')
-    }
+  function resumeBattle() {
+    // walka przerwana wcześniej – mogła się już rozstrzygnąć
+    const { battle } = state
+    if (battle.mistakes >= MAX_MISTAKES) return finishBattle({ ...battle, state }, 'lost')
+    if (battle.chased >= RATS_PER_DAY) return finishBattle({ ...battle, state }, 'saved')
+    setScreen('battle')
+  }
+
+  function startBattle(topics) {
     const day = state.days.length + 1
     const battle = {
       day,
       date: todayStr(),
       cat: catForDay(state.seed, day),
-      tasks: makeDayTasks(seededRandom(Date.now())),
+      topics,
+      tasks: makeDayTasks(seededRandom(Date.now()), RATS_PER_DAY, topics),
       index: 0,
       chased: 0,
       mistakes: 0,
     }
-    update({ ...state, battle })
+    // wybór kategorii zapamiętujemy na kolejne dni
+    update({ ...state, topics, battle })
     setScreen('battle')
   }
 
@@ -96,6 +99,7 @@ export default function App() {
         <Menu
           state={state}
           onStart={startBattle}
+          onResume={resumeBattle}
           onGo={setScreen}
           onReset={() => update(newState())}
           onAllowReplay={() =>

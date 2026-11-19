@@ -23,6 +23,8 @@ export function newState() {
     // zadania z błędną odpowiedzią: { day, topic, text, answer, given: [...], fixed }
     // (starsze zapisy nie mają tego pola – loadState uzupełnia je pustą listą)
     mistakesLog: [],
+    // ostatnio wybrane kategorie zadań (null – wszystkie)
+    topics: null,
   }
 }
 

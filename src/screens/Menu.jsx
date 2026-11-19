@@ -1,9 +1,60 @@
+import { useState } from 'react'
 import { catColors } from '../game/cats.js'
+import { ALL_TOPICS, TOPIC_GROUPS, TOPIC_LABELS } from '../game/tasks.js'
 import { TOTAL_DAYS, isTestMode, playedToday } from '../game/storage.js'
 import Sprite from '../pixel/Sprite.jsx'
 import { CAT_SIT, CAT_WALK_BLACK, GRAVE, GRAVE_COLORS, RAT_COLORS, RAT_WALK } from '../pixel/sprites.js'
 
-export default function Menu({ state, onStart, onGo, onReset, onAllowReplay }) {
+// Wybór kategorii zadań, rozwijany pod przyciskiem „Ratuj kotka!”.
+function TopicPicker({ initial, onStart }) {
+  const [chosen, setChosen] = useState(() => new Set(initial.filter((t) => ALL_TOPICS.includes(t))))
+
+  const toggle = (topics, on) =>
+    setChosen((prev) => {
+      const next = new Set(prev)
+      topics.forEach((t) => (on ? next.add(t) : next.delete(t)))
+      return next
+    })
+
+  return (
+    <div className="topic-picker">
+      <p className="picker-title">Wybierz kategorie zadań:</p>
+      {TOPIC_GROUPS.map((group) => {
+        const all = group.topics.every((t) => chosen.has(t))
+        return (
+          <div key={group.label} className="picker-group">
+            <button className="picker-group-label" onClick={() => toggle(group.topics, !all)}>
+              {group.label} {all ? '(odznacz)' : '(zaznacz)'}
+            </button>
+            <div className="picker-chips">
+              {group.topics.map((t) => (
+                <button
+                  key={t}
+                  className={`chip ${chosen.has(t) ? 'on' : ''}`}
+                  aria-pressed={chosen.has(t)}
+                  onClick={() => toggle([t], !chosen.has(t))}
+                >
+                  {chosen.has(t) ? '✓ ' : ''}
+                  {TOPIC_LABELS[t]}
+                </button>
+              ))}
+            </div>
+          </div>
+        )
+      })}
+      <button
+        className="btn btn-start"
+        disabled={chosen.size === 0}
+        onClick={() => onStart(ALL_TOPICS.filter((t) => chosen.has(t)))}
+      >
+        {chosen.size === 0 ? 'Zaznacz chociaż jedną' : 'Do walki!'}
+      </button>
+    </div>
+  )
+}
+
+export default function Menu({ state, onStart, onResume, onGo, onReset, onAllowReplay }) {
+  const [picking, setPicking] = useState(false)
   const test = isTestMode()
   const finished = state.days.length >= TOTAL_DAYS && !state.battle
   const doneToday = playedToday(state) && !test
@@ -31,9 +82,16 @@ export default function Menu({ state, onStart, onGo, onReset, onAllowReplay }) {
 
       <div className="menu-buttons">
         {!finished && (
-          <button className="btn btn-big btn-start" disabled={doneToday} onClick={onStart}>
+          <button
+            className="btn btn-big btn-start"
+            disabled={doneToday}
+            onClick={() => (state.battle ? onResume() : setPicking((p) => !p))}
+          >
             {state.battle ? 'Wróć do walki!' : doneToday ? 'Wróć jutro' : 'Ratuj kotka!'}
           </button>
+        )}
+        {picking && !state.battle && !doneToday && !finished && (
+          <TopicPicker initial={state.topics ?? ALL_TOPICS} onStart={onStart} />
         )}
         <button className="btn" onClick={() => onGo('room')}>
           Odwiedź kotki ({saved})
