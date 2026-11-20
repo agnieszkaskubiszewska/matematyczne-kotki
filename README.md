@@ -11,6 +11,9 @@ zadania matematyczne. Przed walką wybiera się kategorie zadań:
 - **Pieniądze i miary:** złote i grosze, długość, masa, pojemność,
 - **Inne:** liczby rzymskie, obwód, zadania tekstowe.
 
+Kategorie można też zmienić w trakcie walki („Zmień kategorie zadań” w menu) –
+przegonione szczury i błędy zostają, losują się tylko pozostałe zadania.
+
 Zasady:
 
 - dobra odpowiedź – szczur ucieka,

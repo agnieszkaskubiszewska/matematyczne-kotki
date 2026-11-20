@@ -53,7 +53,7 @@ function TopicPicker({ initial, onStart }) {
   )
 }
 
-export default function Menu({ state, onStart, onResume, onGo, onReset, onAllowReplay }) {
+export default function Menu({ state, onStart, onResume, onChangeTopics, onGo, onReset, onAllowReplay }) {
   const [picking, setPicking] = useState(false)
   const test = isTestMode()
   const finished = state.days.length >= TOTAL_DAYS && !state.battle
@@ -90,8 +90,16 @@ export default function Menu({ state, onStart, onResume, onGo, onReset, onAllowR
             {state.battle ? 'Wróć do walki!' : doneToday ? 'Wróć jutro' : 'Ratuj kotka!'}
           </button>
         )}
-        {picking && !state.battle && !doneToday && !finished && (
-          <TopicPicker initial={state.topics ?? ALL_TOPICS} onStart={onStart} />
+        {state.battle && (
+          <button className="btn btn-small" onClick={() => setPicking((p) => !p)}>
+            {picking ? 'Schowaj kategorie' : 'Zmień kategorie zadań'}
+          </button>
+        )}
+        {picking && !doneToday && !finished && (
+          <TopicPicker
+            initial={state.battle?.topics ?? state.topics ?? ALL_TOPICS}
+            onStart={state.battle ? onChangeTopics : onStart}
+          />
         )}
         <button className="btn" onClick={() => onGo('room')}>
           Odwiedź kotki ({saved})

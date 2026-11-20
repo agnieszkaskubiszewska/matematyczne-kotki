@@ -66,6 +66,17 @@ export default function App() {
     setScreen('battle')
   }
 
+  // Zmiana kategorii w trwającej walce: przegonione szczury i błędy zostają,
+  // a pozostałe zadania losujemy od nowa z nowych kategorii.
+  function changeTopics(topics) {
+    const { battle } = state
+    // zadanie z drugą szansą zostaje, żeby nie zgubić jego wpisu na liście trudnych
+    const keep = battle.tasks.slice(0, battle.index + (battle.warned ? 1 : 0))
+    const fresh = makeDayTasks(seededRandom(Date.now()), Math.max(1, RATS_PER_DAY - battle.chased), topics)
+    update({ ...state, topics, battle: { ...battle, topics, tasks: [...keep, ...fresh] } })
+    setScreen('battle')
+  }
+
   const savedCats = state.days.filter((d) => d.result === 'saved')
   const lostCats = state.days.filter((d) => d.result === 'lost')
 
@@ -100,6 +111,7 @@ export default function App() {
           state={state}
           onStart={startBattle}
           onResume={resumeBattle}
+          onChangeTopics={changeTopics}
           onGo={setScreen}
           onReset={() => update(newState())}
           onAllowReplay={() =>
