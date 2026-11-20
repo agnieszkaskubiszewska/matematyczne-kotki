@@ -2,7 +2,18 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { catColors } from '../game/cats.js'
 import { seededRandom } from '../game/random.js'
 import { MAX_MISTAKES, RATS_PER_DAY } from '../game/storage.js'
-import { makeExtraTask } from '../game/tasks.js'
+import {
+  TOPIC_LABELS,
+  WEEKDAYS,
+  WEEKDAYS_SHORT,
+  answerText,
+  checkAnswer,
+  givenText,
+  isComplete,
+  makeExtraTask,
+  needsDay,
+  needsTime,
+} from '../game/tasks.js'
 import Sprite from '../pixel/Sprite.jsx'
 import { CAT_WALK, HEART, HEART_COLORS, HEART_EMPTY_COLORS, RAT_COLORS, RAT_WALK } from '../pixel/sprites.js'
 
@@ -11,9 +22,37 @@ const FRONT_X = [62, 47, 32, 13]
 const QUEUE_GAP = 11
 const VISIBLE_RATS = 4
 const PRAISE = ['Brawo!', 'Super!', 'Świetnie!', 'Tak jest!', 'Uciekaj, szczurze!', 'Ekstra!', 'Pięknie!']
+const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', ':']
+
+// Co pokazać w chmurce nad szczurem. Długie zadania są w karcie pod sceną,
+// a w chmurce zostaje tylko nazwa kategorii.
+function cloudText(task) {
+  if (task.long) return task.solved ? answerText(task) : TOPIC_LABELS[task.topic]
+  if (task.text.includes('=')) return task.solved ? task.text.replace('?', answerText(task)) : task.text
+  return `${task.text} = ${task.solved ? answerText(task) : '?'}`
+}
+
+function AnalogClock({ h, m }) {
+  const hourAngle = ((h % 12) + m / 60) * 30
+  const minuteAngle = m * 6
+  return (
+    <svg className="analog-clock" viewBox="-50 -50 100 100" role="img" aria-label="zegar">
+      <circle r="46" fill="#fff" stroke="var(--ink)" strokeWidth="4" />
+      {Array.from({ length: 12 }, (_, i) => (
+        <text key={i} x={36 * Math.sin((i + 1) * (Math.PI / 6))} y={-36 * Math.cos((i + 1) * (Math.PI / 6)) + 4}>
+          {i + 1}
+        </text>
+      ))}
+      <line y2="-22" stroke="var(--ink)" strokeWidth="5" strokeLinecap="round" transform={`rotate(${hourAngle})`} />
+      <line y2="-34" stroke="#d94848" strokeWidth="3" strokeLinecap="round" transform={`rotate(${minuteAngle})`} />
+      <circle r="4" fill="var(--ink)" />
+    </svg>
+  )
+}
 
 export default function Battle({ battle, onChange, onFinish, onExit }) {
   const [input, setInput] = useState('')
+  const [day, setDay] = useState(null)
   // idle – czekamy na odpowiedź; warn – pierwsza zła odpowiedź, jest druga szansa;
   // hit – szczur ucieka; miss – szczur się zbliża; caught – koniec
   const [phase, setPhase] = useState('idle')
@@ -31,16 +70,24 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
   const frontX = phase === 'caught' ? FRONT_X[3] : FRONT_X[Math.min(step, 2)]
 
   const submit = useCallback(() => {
-    if (phase !== 'idle' || input === '') return
     const current = battle.tasks[battle.index]
-    const given = Number(input)
-    const correct = given === current.answer
+    if (phase !== 'idle' || !isComplete(current, input, day)) return
+    const given = givenText(current, input, day)
+    const correct = checkAnswer(current, input, day)
     const wrongAnswers = battle.wrongAnswers ?? []
     setInput('')
+    setDay(null)
 
     // Pierwsza zła odpowiedź na to zadanie: tylko ostrzeżenie i druga szansa.
     if (!correct && !battle.warned) {
-      const entry = { day: battle.day, topic: current.topic, text: current.text, answer: current.answer, given: [given] }
+      const entry = {
+        day: battle.day,
+        topic: current.topic,
+        text: current.text,
+        answer: answerText(current),
+        long: current.long,
+        given: [given],
+      }
       onChange({ ...battle, warned: true, wrongAnswers: [...wrongAnswers, entry] })
       setPhase('warn')
       setMessage({ kind: 'warn', text: 'Zła odpowiedź! Spróbuj jeszcze raz' })
@@ -62,7 +109,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
       next.wrongAnswers = [...wrongAnswers.slice(0, -1), updated]
     }
     if (next.index >= next.tasks.length) {
-      next.tasks = [...next.tasks, makeExtraTask(seededRandom(Date.now()), next.tasks)]
+      next.tasks = [...next.tasks, makeExtraTask(seededRandom(Date.now()), next.tasks, battle.topics)]
     }
     onChange(next)
 
@@ -79,33 +126,39 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
     } else {
       setShownTask({ ...current, solved: true })
       setPhase('miss')
-      setMessage({ kind: 'bad', text: `Ojej! Dobry wynik to ${current.answer}` })
+      setMessage({ kind: 'bad', text: `Ojej! Dobra odpowiedź: ${answerText(current)}` })
       if (next.mistakes >= MAX_MISTAKES) {
-        later(() => setPhase('caught'), 1800)
-        later(() => onFinish(next, 'lost'), 3600)
+        later(() => setPhase('caught'), 2400)
+        later(() => onFinish(next, 'lost'), 4200)
       } else {
         later(() => {
           setShownTask(null)
           setMessage(null)
           setPhase('idle')
-        }, 2400)
+        }, current.long ? 3600 : 2400)
       }
     }
-  }, [phase, input, battle, onChange, onFinish])
+  }, [phase, input, day, battle, onChange, onFinish])
 
   const press = useCallback(
     (key) => {
       if (phase !== 'idle') return
       if (key === 'ok') return submit()
       if (key === 'del') return setInput((v) => v.slice(0, -1))
-      setInput((v) => (v.length >= 3 ? v : (v + key).replace(/^0+(?=\d)/, '')))
+      const current = battle.tasks[battle.index]
+      if (key === ':' && (!needsTime(current) || input.includes(':'))) return
+      setInput((v) => {
+        if (v.length >= 5) return v
+        // zera na początku liczby są zbędne, ale w godzinie "08:30" już nie
+        return needsTime(current) ? v + key : (v + key).replace(/^0+(?=\d)/, '')
+      })
     },
-    [phase, submit],
+    [phase, submit, battle, input],
   )
 
   useEffect(() => {
     function onKey(e) {
-      const key = /^\d$/.test(e.key) ? e.key : { Backspace: 'del', Enter: 'ok' }[e.key]
+      const key = /^\d$/.test(e.key) ? e.key : { Backspace: 'del', Enter: 'ok', ':': ':', '.': ':' }[e.key]
       if (!key) return
       // bez tego Enter "kliknąłby" też przycisk klawiatury ekranowej
       e.preventDefault()
@@ -122,6 +175,9 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
     rats.push({ id, x: frontX + i * QUEUE_GAP })
   }
   const ratsLeft = RATS_PER_DAY - battle.chased
+  const current = battle.tasks[battle.index]
+  const timeMode = needsTime(current)
+  const dayMode = needsDay(current)
 
   return (
     <div className="screen battle">
@@ -137,7 +193,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
         </span>
       </div>
 
-      <div className={`stage ${phase === 'miss' || phase === 'warn' ? 'shake' : ''}`}>
+      <div className={`stage ${phase === 'miss' || phase === 'warn' ? 'shake' : ''} ${task.long ? 'compact' : ''}`}>
         <div className="stage-inner" style={{ '--px': '0.68cqw' }}>
           <div className="moon" />
           <div className={`battle-cat ${phase === 'hit' ? 'pounce' : ''} ${phase === 'caught' ? 'caught' : ''}`}>
@@ -156,12 +212,13 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
             </div>
           )}
 
-          {phase !== 'caught' && phase !== 'hit' && (
+          {/* przy zadaniu tekstowym chmurka ma tylko nazwę kategorii, więc ustępuje miejsca komunikatom */}
+          {phase !== 'caught' && phase !== 'hit' && !(task.long && message) && (
             <div
               className={`cloud ${task.solved ? 'cloud-solved' : battle.warned ? 'cloud-retry' : ''}`}
               style={{ left: `${frontX + 7}%` }}
             >
-              {task.text} = {task.solved ? task.answer : '?'}
+              {cloudText(task)}
             </div>
           )}
 
@@ -170,21 +227,60 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
         </div>
       </div>
 
-      <div className="answer-box">
-        <div className="answer-display">{input || <span className="placeholder">?</span>}</div>
-        <div className="keypad">
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'].map((key) => (
-            <button
-              key={key}
-              className={`btn key ${key === 'ok' ? 'key-ok' : ''}`}
-              disabled={phase !== 'idle'}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => press(key)}
-            >
-              {key === 'del' ? '⌫' : key === 'ok' ? 'OK' : key}
-            </button>
-          ))}
+      {task.long && phase !== 'caught' && (
+        <div className={`task-card ${battle.warned && !task.solved ? 'cloud-retry' : ''}`}>
+          <span className="task-topic">{TOPIC_LABELS[task.topic]}</span>
+          {task.clock && <AnalogClock {...task.clock} />}
+          <p className="task-text">{task.text}</p>
+          {task.solved && <p className="task-solution">Dobra odpowiedź: {answerText(task)}</p>}
         </div>
+      )}
+
+      <div className="answer-box">
+        {dayMode && (
+          <div className="weekdays">
+            {WEEKDAYS_SHORT.map((label, i) => (
+              <button
+                key={label}
+                className={`btn key weekday ${day === i ? 'on' : ''}`}
+                title={WEEKDAYS[i]}
+                disabled={phase !== 'idle'}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setDay(i)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className={`answer-display ${current.kind === 'dayTime' ? 'small' : ''}`}>
+          {dayMode && <span className={day === null ? 'placeholder' : ''}>{day === null ? 'dzień?' : WEEKDAYS[day]}</span>}
+          {dayMode && current.kind === 'dayTime' && ', '}
+          {current.kind !== 'weekday' && (input || <span className="placeholder">{timeMode ? 'godz:min' : '?'}</span>)}
+        </div>
+        {current.kind !== 'weekday' && (
+          <div className="keypad">
+            {KEYS.map((key) => (
+              <button
+                key={key}
+                className="btn key"
+                disabled={phase !== 'idle' || (key === ':' && !timeMode)}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => press(key)}
+              >
+                {key === 'del' ? '⌫' : key}
+              </button>
+            ))}
+          </div>
+        )}
+        <button
+          className="btn key key-ok"
+          disabled={phase !== 'idle' || !isComplete(current, input, day)}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => press('ok')}
+        >
+          OK
+        </button>
       </div>
     </div>
   )

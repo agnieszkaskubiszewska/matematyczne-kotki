@@ -1,14 +1,16 @@
-const TOPIC_NAMES = {
-  add: 'Dodawanie',
-  sub: 'Odejmowanie',
-  mul: 'Mnożenie',
-  div: 'Dzielenie',
+import { ALL_TOPICS, TOPIC_LABELS } from '../game/tasks.js'
+
+// Treść zadania razem z dobrą odpowiedzią. Starsze wpisy mają tylko
+// działania typu "7 · 8", nowe mogą mieć okienko "?" albo dłuższą treść.
+function solvedTask(e) {
+  if (e.long) return e.text
+  if (e.text.includes('=')) return e.text.replace('?', e.answer)
+  return `${e.text} = ${e.answer}`
 }
 
 // Lista zadań, przy których padła zła odpowiedź – najnowsze dni na górze.
 export default function Mistakes({ entries, onBack }) {
-  const byTopic = Object.keys(TOPIC_NAMES)
-    .map((topic) => ({ topic, count: entries.filter((e) => e.topic === topic).length }))
+  const byTopic = ALL_TOPICS.map((topic) => ({ topic, count: entries.filter((e) => e.topic === topic).length }))
     .filter((t) => t.count > 0)
     .sort((a, b) => b.count - a.count)
 
@@ -26,7 +28,7 @@ export default function Mistakes({ entries, onBack }) {
           <div className="topic-summary">
             {byTopic.map((t) => (
               <span key={t.topic} className="topic-chip">
-                {TOPIC_NAMES[t.topic]}: <strong>{t.count}</strong>
+                {TOPIC_LABELS[t.topic]}: <strong>{t.count}</strong>
               </span>
             ))}
           </div>
@@ -38,11 +40,11 @@ export default function Mistakes({ entries, onBack }) {
                   {entries
                     .filter((e) => e.day === day)
                     .map((e, i) => (
-                      <li key={i} className={e.fixed ? 'fixed' : 'missed'}>
-                        <span className="mistake-task">
-                          {e.text} = {e.answer}
-                        </span>
-                        <span className="mistake-given">wpisano: {e.given.join(', ')}</span>
+                      <li key={i} className={`${e.fixed ? 'fixed' : 'missed'} ${e.long ? 'long' : ''}`}>
+                        <span className="mistake-topic">{TOPIC_LABELS[e.topic]}</span>
+                        <span className="mistake-task">{solvedTask(e)}</span>
+                        {e.long && <span className="mistake-answer">dobra odpowiedź: {e.answer}</span>}
+                        <span className="mistake-given">wpisano: {e.given.join(' / ')}</span>
                         <span className="mistake-result">
                           {e.fixed === undefined ? '…' : e.fixed ? '✓ poprawione za 2. razem' : '✗ szczur podszedł bliżej'}
                         </span>

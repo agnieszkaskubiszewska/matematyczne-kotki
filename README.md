@@ -2,10 +2,14 @@
 
 Gra matematyczna dla dzieci z 3 klasy szkoły podstawowej. 30-dniowe wyzwanie:
 każdego dnia trzeba uratować jednego kotka przed 30 szczurami, rozwiązując
-zadania matematyczne:
+zadania matematyczne. Przed walką wybiera się kategorie zadań:
 
-- dodawanie i odejmowanie w zakresie 300 (najwięcej odejmowania),
-- mnożenie i dzielenie na wyższych liczbach z tabliczki, np. 8 · 9 albo 63 : 7.
+- **Liczenie:** dodawanie i odejmowanie do 300, mnożenie i dzielenie (np. 8 · 9, 63 : 7),
+  kolejność działań, brakująca liczba,
+- **Czas:** zegar (także zegar ze wskazówkami i „która będzie za 100 godzin”),
+  kalendarz, podróże z dniem tygodnia i godziną przyjazdu,
+- **Pieniądze i miary:** złote i grosze, długość, masa, pojemność,
+- **Inne:** liczby rzymskie, obwód, zadania tekstowe.
 
 Zasady:
 
