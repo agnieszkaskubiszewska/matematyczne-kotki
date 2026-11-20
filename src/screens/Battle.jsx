@@ -193,48 +193,50 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
         </span>
       </div>
 
-      <div className={`stage ${phase === 'miss' || phase === 'warn' ? 'shake' : ''} ${task.long ? 'compact' : ''}`}>
-        <div className="stage-inner" style={{ '--px': '0.68cqw' }}>
-          <div className="moon" />
-          <div className={`battle-cat ${phase === 'hit' ? 'pounce' : ''} ${phase === 'caught' ? 'caught' : ''}`}>
-            <Sprite frames={CAT_WALK} colors={catColors(battle.cat.palette)} fps={phase === 'hit' ? 8 : 0} />
-            <span className="name-tag">{battle.cat.name}</span>
+      <div className="battle-main">
+        <div className={`stage ${phase === 'miss' || phase === 'warn' ? 'shake' : ''} ${task.long ? 'compact' : ''}`}>
+          <div className="stage-inner" style={{ '--px': '0.68cqw' }}>
+            <div className="moon" />
+            <div className={`battle-cat ${phase === 'hit' ? 'pounce' : ''} ${phase === 'caught' ? 'caught' : ''}`}>
+              <Sprite frames={CAT_WALK} colors={catColors(battle.cat.palette)} fps={phase === 'hit' ? 8 : 0} />
+              <span className="name-tag">{battle.cat.name}</span>
+            </div>
+
+            {rats.map((rat) => (
+              <div key={rat.id} className="rat" style={{ left: `${rat.x}%` }}>
+                <Sprite frames={RAT_WALK} colors={RAT_COLORS} fps={3} />
+              </div>
+            ))}
+            {fleeingRat !== null && (
+              <div key={`flee-${fleeingRat}`} className="rat fleeing" style={{ left: `${frontX}%` }}>
+                <Sprite frames={RAT_WALK} colors={RAT_COLORS} fps={10} flip />
+              </div>
+            )}
+
+            {/* przy zadaniu tekstowym chmurka ma tylko nazwę kategorii, więc ustępuje miejsca komunikatom */}
+            {phase !== 'caught' && phase !== 'hit' && !(task.long && message) && (
+              <div
+                className={`cloud ${task.solved ? 'cloud-solved' : battle.warned ? 'cloud-retry' : ''}`}
+                style={{ left: `${frontX + 7}%` }}
+              >
+                {cloudText(task)}
+              </div>
+            )}
+
+            {message && <div className={`battle-message ${message.kind}`}>{message.text}</div>}
+            <div className="rats-left">Szczury: {ratsLeft}</div>
           </div>
-
-          {rats.map((rat) => (
-            <div key={rat.id} className="rat" style={{ left: `${rat.x}%` }}>
-              <Sprite frames={RAT_WALK} colors={RAT_COLORS} fps={3} />
-            </div>
-          ))}
-          {fleeingRat !== null && (
-            <div key={`flee-${fleeingRat}`} className="rat fleeing" style={{ left: `${frontX}%` }}>
-              <Sprite frames={RAT_WALK} colors={RAT_COLORS} fps={10} flip />
-            </div>
-          )}
-
-          {/* przy zadaniu tekstowym chmurka ma tylko nazwę kategorii, więc ustępuje miejsca komunikatom */}
-          {phase !== 'caught' && phase !== 'hit' && !(task.long && message) && (
-            <div
-              className={`cloud ${task.solved ? 'cloud-solved' : battle.warned ? 'cloud-retry' : ''}`}
-              style={{ left: `${frontX + 7}%` }}
-            >
-              {cloudText(task)}
-            </div>
-          )}
-
-          {message && <div className={`battle-message ${message.kind}`}>{message.text}</div>}
-          <div className="rats-left">Szczury: {ratsLeft}</div>
         </div>
+
+        {task.long && phase !== 'caught' && (
+          <div className={`task-card ${battle.warned && !task.solved ? 'cloud-retry' : ''}`}>
+            <span className="task-topic">{TOPIC_LABELS[task.topic]}</span>
+            {task.clock && <AnalogClock {...task.clock} />}
+            <p className="task-text">{task.text}</p>
+            {task.solved && <p className="task-solution">Dobra odpowiedź: {answerText(task)}</p>}
+          </div>
+        )}
       </div>
-
-      {task.long && phase !== 'caught' && (
-        <div className={`task-card ${battle.warned && !task.solved ? 'cloud-retry' : ''}`}>
-          <span className="task-topic">{TOPIC_LABELS[task.topic]}</span>
-          {task.clock && <AnalogClock {...task.clock} />}
-          <p className="task-text">{task.text}</p>
-          {task.solved && <p className="task-solution">Dobra odpowiedź: {answerText(task)}</p>}
-        </div>
-      )}
 
       <div className="answer-box">
         {dayMode && (

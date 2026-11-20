@@ -156,6 +156,40 @@
   font-size: 1.4rem;
 }
 
+.battle-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Na szerokim, ale niskim ekranie (laptop) klawiatura stoi obok sceny,
+   żeby nie trzeba było przewijać do przycisku OK. */
+@media (min-width: 820px) {
+  .screen.battle {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'hud hud'
+      'main answer';
+    align-items: start;
+    column-gap: 24px;
+  }
+
+  .battle-hud {
+    grid-area: hud;
+  }
+
+  .battle-main {
+    grid-area: main;
+  }
+
+  .screen.battle .answer-box {
+    grid-area: answer;
+  }
+}
+
 .hud-hearts {
   display: flex;
   gap: 6px;
