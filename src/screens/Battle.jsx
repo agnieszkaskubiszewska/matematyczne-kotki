@@ -11,6 +11,7 @@ import {
   givenText,
   isComplete,
   makeExtraTask,
+  needsChoice,
   needsDay,
   needsTime,
 } from '../game/tasks.js'
@@ -52,6 +53,7 @@ function AnalogClock({ h, m }) {
 
 export default function Battle({ battle, onChange, onFinish, onExit }) {
   const [input, setInput] = useState('')
+  // wybrany przycisk: dzień tygodnia albo odpowiedź do wyboru (słówka)
   const [day, setDay] = useState(null)
   // idle – czekamy na odpowiedź; warn – pierwsza zła odpowiedź, jest druga szansa;
   // hit – szczur ucieka; miss – szczur się zbliża; caught – koniec
@@ -60,6 +62,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
   const [fleeingRat, setFleeingRat] = useState(null)
   const [message, setMessage] = useState(null)
   const timers = useRef([])
+  const ratsTotal = battle.ratsTotal ?? RATS_PER_DAY
 
   useEffect(() => () => timers.current.forEach(clearTimeout), [])
 
@@ -120,7 +123,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
       later(() => {
         setFleeingRat(null)
         setMessage(null)
-        if (next.chased >= RATS_PER_DAY) onFinish(next, 'saved')
+        if (next.chased >= ratsTotal) onFinish(next, 'saved')
         else setPhase('idle')
       }, 800)
     } else {
@@ -138,7 +141,7 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
         }, current.long ? 3600 : 2400)
       }
     }
-  }, [phase, input, day, battle, onChange, onFinish])
+  }, [phase, input, day, battle, ratsTotal, onChange, onFinish])
 
   const press = useCallback(
     (key) => {
@@ -146,6 +149,12 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
       if (key === 'ok') return submit()
       if (key === 'del') return setInput((v) => v.slice(0, -1))
       const current = battle.tasks[battle.index]
+      // przy słówkach klawisze 1–4 wybierają odpowiedź
+      if (needsChoice(current)) {
+        const i = Number(key) - 1
+        if (i >= 0 && i < current.options.length) setDay(i)
+        return
+      }
       if (key === ':' && (!needsTime(current) || input.includes(':'))) return
       setInput((v) => {
         if (v.length >= 5) return v
@@ -171,13 +180,14 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
   const rats = []
   for (let i = 0; i < VISIBLE_RATS; i++) {
     const id = battle.chased + i
-    if (id >= RATS_PER_DAY || id === fleeingRat) continue
+    if (id >= ratsTotal || id === fleeingRat) continue
     rats.push({ id, x: frontX + i * QUEUE_GAP })
   }
-  const ratsLeft = RATS_PER_DAY - battle.chased
+  const ratsLeft = ratsTotal - battle.chased
   const current = battle.tasks[battle.index]
   const timeMode = needsTime(current)
   const dayMode = needsDay(current)
+  const choiceMode = needsChoice(current)
 
   return (
     <div className="screen battle">
@@ -255,12 +265,30 @@ export default function Battle({ battle, onChange, onFinish, onExit }) {
             ))}
           </div>
         )}
-        <div className={`answer-display ${current.kind === 'dayTime' ? 'small' : ''}`}>
+        {choiceMode && (
+          <div className="choices">
+            {current.options.map((option, i) => (
+              <button
+                key={option}
+                className={`btn key choice ${day === i ? 'on' : ''}`}
+                disabled={phase !== 'idle'}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => setDay(i)}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className={`answer-display ${current.kind === 'dayTime' || choiceMode ? 'small' : ''}`}>
+          {choiceMode && (
+            <span className={day === null ? 'placeholder' : ''}>{day === null ? 'wybierz' : current.options[day]}</span>
+          )}
           {dayMode && <span className={day === null ? 'placeholder' : ''}>{day === null ? 'dzień?' : WEEKDAYS[day]}</span>}
           {dayMode && current.kind === 'dayTime' && ', '}
-          {current.kind !== 'weekday' && (input || <span className="placeholder">{timeMode ? 'godz:min' : '?'}</span>)}
+          {current.kind !== 'weekday' && !choiceMode && (input || <span className="placeholder">{timeMode ? 'godz:min' : '?'}</span>)}
         </div>
-        {current.kind !== 'weekday' && (
+        {current.kind !== 'weekday' && !choiceMode && (
           <div className="keypad">
             {KEYS.map((key) => (
               <button

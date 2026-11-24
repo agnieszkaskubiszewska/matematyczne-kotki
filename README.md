@@ -9,7 +9,11 @@ zadania matematyczne. Przed walką wybiera się kategorie zadań:
 - **Czas:** zegar (także zegar ze wskazówkami i „która będzie za 100 godzin”),
   kalendarz, podróże z dniem tygodnia i godziną przyjazdu,
 - **Pieniądze i miary:** złote i grosze, długość, masa, pojemność,
-- **Inne:** liczby rzymskie, obwód, zadania tekstowe.
+- **Inne:** liczby rzymskie, obwód, zadania tekstowe,
+- **Angielski:** słówka z zakresu klasy 3 (kolory, zwierzęta, jedzenie, rodzina,
+  ubrania, szkoła, dom, pogoda, dni, miesiące, liczby). To dodatek: przychodzi
+  wtedy 10 szczurów więcej, a 30 zadań z matematyki zostaje bez zmian.
+  Słówka wybiera się z czterech odpowiedzi (także klawiszami 1–4).
 
 Kategorie można też zmienić w trakcie walki („Zmień kategorie zadań” w menu) –
 przegonione szczury i błędy zostają, losują się tylko pozostałe zadania.

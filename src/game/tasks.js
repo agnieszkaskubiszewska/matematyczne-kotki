@@ -1,3 +1,4 @@
+import { makeEnglishTask } from './english.js'
 import { pick, randInt as r, shuffle } from './random.js'
 
 // Gracz ma drugą szansę przy każdym zadaniu, więc zadania są wymagające
@@ -9,7 +10,8 @@ const MAX = 300
 // kind: 'number' – liczba; 'time' – godzina (answer w minutach od północy);
 // 'time12' – godzina z tarczy zegara (rano/wieczór bez znaczenia);
 // 'weekday' – dzień tygodnia (answer to indeks w WEEKDAYS);
-// 'dayTime' – dzień tygodnia i godzina (answer: { day, minutes }).
+// 'dayTime' – dzień tygodnia i godzina (answer: { day, minutes });
+// 'choice' – wybór jednej z options (answer to indeks; słówka angielskie).
 // long – zadanie tekstowe, wyświetlane w karcie pod sceną zamiast w chmurce.
 
 export const WEEKDAYS = ['poniedziałek', 'wtorek', 'środa', 'czwartek', 'piątek', 'sobota', 'niedziela']
@@ -32,6 +34,7 @@ export const TOPIC_LABELS = {
   order: 'Kolejność działań',
   missing: 'Brakująca liczba',
   story: 'Zadanie tekstowe',
+  english: 'Angielski',
 }
 
 const NAMES = ['Ola', 'Kuba', 'Zosia', 'Antek', 'Hania', 'Franek', 'Lena', 'Staś', 'Maja', 'Tymek']
@@ -517,16 +520,22 @@ export const TOPIC_GROUPS = [
   { label: 'Czas', topics: ['clock', 'calendar', 'travel'] },
   { label: 'Pieniądze i miary', topics: ['money', 'length', 'mass', 'capacity'] },
   { label: 'Inne', topics: ['roman', 'perimeter', 'story'] },
+  { label: 'Angielski', topics: ['english'] },
 ]
 
 export const ALL_TOPICS = TOPIC_GROUPS.flatMap((g) => g.topics)
+export const MATH_TOPICS = ALL_TOPICS.filter((t) => t !== 'english')
+
+// Słówka nie zabierają miejsca zadaniom matematycznym – dochodzą do nich
+// jako dodatkowe szczury.
+export const ENGLISH_EXTRA = 10
 
 const SHORT_TOPICS = new Set(['add', 'sub', 'mul', 'div', 'order', 'missing'])
 
 export function makeTask(rng, topic, used = new Set()) {
   let task
   for (let tries = 0; tries < 50; tries++) {
-    task = { topic, kind: 'number', ...TOPICS[topic](rng) }
+    task = { topic, kind: 'number', ...(topic === 'english' ? makeEnglishTask(rng) : TOPICS[topic](rng)) }
     if (!SHORT_TOPICS.has(topic)) task.long = true
     if (!used.has(taskKey(task))) break
   }
@@ -538,18 +547,30 @@ function taskKey(task) {
   return task.clock ? `${task.text} ${task.clock.h}:${task.clock.m}` : task.text
 }
 
-// Wybrane kategorie dzielą się zadaniami po równo; przy nierównym
+// Ile szczurów przychodzi danego dnia: 30 z zadaniami z matematyki
+// i 10 więcej, jeśli zaznaczono angielski.
+export function ratsFor(topics, mathRats) {
+  return mathRats + (topics.includes('english') ? ENGLISH_EXTRA : 0)
+}
+
+// Wybrane kategorie matematyczne dzielą się zadaniami po równo; przy nierównym
 // podziale losujemy, które kategorie dostaną jedno zadanie więcej.
-export function makeDayTasks(rng, count, topics = ALL_TOPICS) {
+// Słówka angielskie to co czwarte zadanie (10 z 40), wymieszane z resztą.
+export function makeDayTasks(rng, count, topics = MATH_TOPICS) {
   const used = new Set()
-  const order = shuffle(rng, topics)
-  const list = Array.from({ length: count }, (_, i) => order[i % order.length])
+  const math = topics.filter((t) => t !== 'english')
+  const english = topics.includes('english') ? Math.round((count * ENGLISH_EXTRA) / (30 + ENGLISH_EXTRA)) : 0
+  const order = shuffle(rng, math)
+  const list = Array.from({ length: count - english }, (_, i) => order[i % order.length])
+  for (let i = 0; i < english; i++) list.push('english')
   return shuffle(rng, list).map((topic) => makeTask(rng, topic, used))
 }
 
-export function makeExtraTask(rng, tasks, topics = ALL_TOPICS) {
+// Zapasowe zadanie, gdy po błędach zabraknie zadań – zawsze z matematyki.
+export function makeExtraTask(rng, tasks, topics = MATH_TOPICS) {
   const used = new Set(tasks.map(taskKey))
-  return makeTask(rng, pick(rng, topics), used)
+  const math = topics.filter((t) => t !== 'english')
+  return makeTask(rng, pick(rng, math.length ? math : MATH_TOPICS), used)
 }
 
 // ---------- Sprawdzanie i wyświetlanie odpowiedzi ----------
@@ -574,9 +595,14 @@ export function needsDay(task) {
   return task.kind === 'weekday' || task.kind === 'dayTime'
 }
 
+export function needsChoice(task) {
+  return task.kind === 'choice'
+}
+
+// Trzeci parametr to wybrany przycisk: dzień tygodnia albo odpowiedź do wyboru.
 export function isComplete(task, input, day) {
-  if (needsDay(task) && day === null) return false
-  if (task.kind === 'weekday') return true
+  if ((needsDay(task) || needsChoice(task)) && day === null) return false
+  if (task.kind === 'weekday' || task.kind === 'choice') return true
   return input !== ''
 }
 
@@ -587,6 +613,7 @@ export function checkAnswer(task, input, day) {
     case 'time12':
       return parseTime(input) !== null && parseTime(input) % 720 === task.answer % 720
     case 'weekday':
+    case 'choice':
       return day === task.answer
     case 'dayTime':
       return day === task.answer.day && parseTime(input) === task.answer.minutes
@@ -602,6 +629,8 @@ export function answerText(task) {
       return formatTime(task.answer)
     case 'weekday':
       return WEEKDAYS[task.answer]
+    case 'choice':
+      return task.options[task.answer]
     case 'dayTime':
       return `${WEEKDAYS[task.answer.day]}, ${formatTime(task.answer.minutes)}`
     default:
@@ -611,6 +640,7 @@ export function answerText(task) {
 
 export function givenText(task, input, day) {
   if (task.kind === 'weekday') return WEEKDAYS[day]
+  if (task.kind === 'choice') return task.options[day]
   if (task.kind === 'dayTime') return `${WEEKDAYS[day]}, ${input}`
   return input
 }
