@@ -9,7 +9,7 @@ import {
   saveState,
   todayStr,
 } from './game/storage.js'
-import { makeDayTasks } from './game/tasks.js'
+import { makeDayTasks, ratsFor } from './game/tasks.js'
 import Battle from './screens/Battle.jsx'
 import Cemetery from './screens/Cemetery.jsx'
 import Defeat from './screens/Defeat.jsx'
@@ -45,18 +45,20 @@ export default function App() {
     // walka przerwana wcześniej – mogła się już rozstrzygnąć
     const { battle } = state
     if (battle.mistakes >= MAX_MISTAKES) return finishBattle({ ...battle, state }, 'lost')
-    if (battle.chased >= RATS_PER_DAY) return finishBattle({ ...battle, state }, 'saved')
+    if (battle.chased >= (battle.ratsTotal ?? RATS_PER_DAY)) return finishBattle({ ...battle, state }, 'saved')
     setScreen('battle')
   }
 
   function startBattle(topics) {
     const day = state.days.length + 1
+    const ratsTotal = ratsFor(topics, RATS_PER_DAY)
     const battle = {
       day,
       date: todayStr(),
       cat: catForDay(state.seed, day),
       topics,
-      tasks: makeDayTasks(seededRandom(Date.now()), RATS_PER_DAY, topics),
+      ratsTotal,
+      tasks: makeDayTasks(seededRandom(Date.now()), ratsTotal, topics),
       index: 0,
       chased: 0,
       mistakes: 0,
@@ -72,8 +74,9 @@ export default function App() {
     const { battle } = state
     // zadanie z drugą szansą zostaje, żeby nie zgubić jego wpisu na liście trudnych
     const keep = battle.tasks.slice(0, battle.index + (battle.warned ? 1 : 0))
-    const fresh = makeDayTasks(seededRandom(Date.now()), Math.max(1, RATS_PER_DAY - battle.chased), topics)
-    update({ ...state, topics, battle: { ...battle, topics, tasks: [...keep, ...fresh] } })
+    const ratsTotal = ratsFor(topics, RATS_PER_DAY)
+    const fresh = makeDayTasks(seededRandom(Date.now()), Math.max(1, ratsTotal - battle.chased), topics)
+    update({ ...state, topics, battle: { ...battle, topics, ratsTotal, tasks: [...keep, ...fresh] } })
     setScreen('battle')
   }
 

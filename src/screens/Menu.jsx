@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { catColors } from '../game/cats.js'
-import { ALL_TOPICS, TOPIC_GROUPS, TOPIC_LABELS } from '../game/tasks.js'
+import { ALL_TOPICS, ENGLISH_EXTRA, MATH_TOPICS, TOPIC_GROUPS, TOPIC_LABELS } from '../game/tasks.js'
+
+const CHIP_LABELS = { ...TOPIC_LABELS, english: `Słówka (+${ENGLISH_EXTRA} szczurów)` }
 import { TOTAL_DAYS, isTestMode, playedToday } from '../game/storage.js'
 import Sprite from '../pixel/Sprite.jsx'
 import { CAT_SIT, CAT_WALK_BLACK, GRAVE, GRAVE_COLORS, RAT_COLORS, RAT_WALK } from '../pixel/sprites.js'
@@ -15,6 +17,9 @@ function TopicPicker({ initial, onStart }) {
       topics.forEach((t) => (on ? next.add(t) : next.delete(t)))
       return next
     })
+
+  // słówka są tylko dodatkiem – potrzebna jest chociaż jedna kategoria z matematyki
+  const hasMath = MATH_TOPICS.some((t) => chosen.has(t))
 
   return (
     <div className="topic-picker">
@@ -35,7 +40,7 @@ function TopicPicker({ initial, onStart }) {
                   onClick={() => toggle([t], !chosen.has(t))}
                 >
                   {chosen.has(t) ? '✓ ' : ''}
-                  {TOPIC_LABELS[t]}
+                  {CHIP_LABELS[t]}
                 </button>
               ))}
             </div>
@@ -44,10 +49,10 @@ function TopicPicker({ initial, onStart }) {
       })}
       <button
         className="btn btn-start"
-        disabled={chosen.size === 0}
+        disabled={!hasMath}
         onClick={() => onStart(ALL_TOPICS.filter((t) => chosen.has(t)))}
       >
-        {chosen.size === 0 ? 'Zaznacz chociaż jedną' : 'Do walki!'}
+        {hasMath ? 'Do walki!' : 'Zaznacz chociaż jedną kategorię z matematyki'}
       </button>
     </div>
   )
@@ -97,7 +102,7 @@ export default function Menu({ state, onStart, onResume, onChangeTopics, onGo, o
         )}
         {picking && !doneToday && !finished && (
           <TopicPicker
-            initial={state.battle?.topics ?? state.topics ?? ALL_TOPICS}
+            initial={state.battle?.topics ?? state.topics ?? MATH_TOPICS}
             onStart={state.battle ? onChangeTopics : onStart}
           />
         )}

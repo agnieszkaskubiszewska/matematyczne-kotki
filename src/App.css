@@ -420,6 +420,27 @@
   width: calc(3 * 72px + 2 * 8px);
 }
 
+/* słówka – cztery odpowiedzi do wyboru */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  width: min(330px, 100%);
+}
+
+.key.choice {
+  font-family: var(--num-font);
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 12px 6px;
+  overflow-wrap: anywhere;
+}
+
+.key.choice.on {
+  background: #ffd9a8;
+  outline: 3px solid var(--accent);
+}
+
 .weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
